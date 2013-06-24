@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 module Pressure where
 import Data.Word
 import Data.Bits
@@ -10,6 +11,10 @@ import BitPrec
 
 {--
 Todo:
+fix space leak
+
+try FFI to C function?
+
 profiling
 can I make code faster?
   bs builder?
@@ -34,13 +39,9 @@ kTop = 1 `shift` kSpaceForByte
 kBot :: Precision
 kBot = 1 `shift` kHalfPrec
 
-data SymbolFreq = SymbolFreq { cumFreq :: Precision,
-                               freq :: Precision,
-                               totFreq :: Precision }
+data SymbolFreq = SymbolFreq !Precision !Precision !Precision
 
-data Range = Range { low :: Precision,
-                     range :: Precision
-                   }
+data Range = Range !Precision !Precision
 
 startRange :: Range
 startRange = Range 0 (-1::Precision)
@@ -48,23 +49,23 @@ startRange = Range 0 (-1::Precision)
 encode :: [SymbolFreq] -> State Range [[Word8]]
 encode sf = do
   e <- mapM encode1 sf
-  r <- get
-  return $ e ++ [map (fromIntegral . (`shiftR` kSpaceForByte)) $ take (kHalfPrec `div` 4) $ iterate (`shift` 8) (low r)]
+  Range low _ <- get
+  return $ e -- ++ [map (fromIntegral . (`shiftR` kSpaceForByte)) $ take (kHalfPrec `div` 4) $ iterate (`shift` 8) low]
 
 encode1 :: SymbolFreq -> State Range [Word8]
 encode1 (SymbolFreq cf f tf) =
   let loop = do
-        r <- get
-        let lx = low r `xor` (low r + range r) < kTop
-        let r2 = if lx then range r else (-low r) .&. (kBot - 1)
-        if lx || range r < kBot then (do
-          put $ Range (low r `shift` 8) (r2 `shift` 8)
+        (Range low range) <- get
+        let lx = low `xor` (low + range) < kTop
+        let r2 = if lx then range else (-low) .&. (kBot - 1)
+        if lx || range < kBot then (do
+          put $ Range (low `shift` 8) (r2 `shift` 8)
           rest <- loop
-          return $ fromIntegral (low r `shiftR` kSpaceForByte):rest)
+          return $! fromIntegral (low `shiftR` kSpaceForByte):rest)
         else return []
   in do
-    r <- get
-    put $ Range (low r + cf * (range r `div` tf)) ((range r `div` tf) * f)
+    (Range low range) <- get
+    put $ Range (low + cf * (range `div` tf)) ((range `div` tf) * f)
     loop
       
 {--

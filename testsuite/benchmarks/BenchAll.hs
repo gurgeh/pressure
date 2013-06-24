@@ -1,17 +1,22 @@
 import Criterion.Main
 import Control.Monad.State
+import Control.Proxy
 
-import Pressure
+import qualified Control.Proxy.Trans.Writer as W
+
+import PPressure
 
 {--
 g++ -O3 20M 650 ms
 ghc -O2:
-130614: 1M 234 ms
+130614: 1M 234 ms (1M 4690 ms - pipes)
 --}
 
---benchEncode :: Int -> [Word8]
+benchEncode :: Int -> Int
 benchEncode n =
-  length $ concat $ evalState (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
+  --length $ concat $ evalState (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
+  getSum $ snd $ evalState (runProxy $ W.runWriterK $ (fromListS $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) >-> PPressure.encode1 >-> lengthD) startRange
+  
 
 main :: IO ()
 main = defaultMain [
