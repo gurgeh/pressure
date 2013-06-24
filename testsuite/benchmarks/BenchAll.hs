@@ -1,14 +1,21 @@
 import Criterion.Main
+import Control.Monad.State
+
 import Pressure
 
-fib :: Int -> Int
-fib 0 = 0
-fib 1 = 1
-fib n = fib (n-1) + fib (n-2)
+{--
+g++ -O3 20M 650 ms
+ghc -O2:
+130614: 1M 234 ms
+--}
 
+--benchEncode :: Int -> [Word8]
+benchEncode n =
+  length $ concat $ evalState (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
+
+main :: IO ()
 main = defaultMain [
-  bgroup "fib" [ bench "10" $ whnf fib 10
-               , bench "35" $ whnf fib 35
-               , bench "37" $ whnf fib 37
+  bgroup "encode" [ bench "0.1M" $ whnf benchEncode 100000
+                  , bench "1M" $ whnf benchEncode 1000000
                ]
   ]

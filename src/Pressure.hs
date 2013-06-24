@@ -10,13 +10,11 @@ import BitPrec
 
 {--
 Todo:
-criterion benchmarks
-
-How fast is C code?
-
 profiling
 can I make code faster?
-try bs builder
+  bs builder?
+  CPS in?
+
 
 decode
 
@@ -56,27 +54,19 @@ encode sf = do
 encode1 :: SymbolFreq -> State Range [Word8]
 encode1 (SymbolFreq cf f tf) =
   let loop = do
-      r <- get
-      let lx = low r `xor` (low r + range r) < kTop
-      let r2 = if lx then range r else (-low r) .&. (kBot - 1)
-      if lx || range r < kBot then do
-        put $ Range (low r `shift` 8) (r2 `shift` 8)
-        rest <- loop
-        return $ fromIntegral (low r `shiftR` kSpaceForByte):rest
-      else return []
+        r <- get
+        let lx = low r `xor` (low r + range r) < kTop
+        let r2 = if lx then range r else (-low r) .&. (kBot - 1)
+        if lx || range r < kBot then (do
+          put $ Range (low r `shift` 8) (r2 `shift` 8)
+          rest <- loop
+          return $ fromIntegral (low r `shiftR` kSpaceForByte):rest)
+        else return []
   in do
     r <- get
     put $ Range (low r + cf * (range r `div` tf)) ((range r `div` tf) * f)
     loop
       
-    
-  
-{--
-main :: IO ()
-main =
-  print $ length $ concat $ evalState (encode $ take 2000000 $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
---}
-
 {--
 
 //Likewise, this primes the class for decoding and should be followed by the first call to *GetFreq*.
