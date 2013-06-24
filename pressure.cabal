@@ -1,0 +1,36 @@
+name:             pressure
+version:          0.1.0
+copyright:        (c) 2013 David Fendrich
+license:          BSD3
+license-file:     LICENSE
+maintainer:       David Fendrich <david@fendrich.se>
+build-type:       Simple
+cabal-version:    >= 1.14
+homepage:         https://github.com/gurgeh/pressure
+category:         Network APIs
+stability:        experimental
+synopsis:         Range coding compression
+description:      Range coding compression
+                  .
+                  Functions for compression and decompression of arbitrary symbols,
+                  given a dynamic model of symbol frequency.
+                  .
+
+source-repository head
+  type: git
+  location: http://github.com/gurgeh/pressure.git
+
+Library
+  Exposed-modules:
+        Pressure
+      , BitPrec
+  ghc-options:
+      -Wall -fno-warn-unused-do-bind
+  default-language:
+      Haskell2010
+  hs-source-dirs:
+      src
+  build-depends:
+        base >= 4 && <= 5
+      , mtl >= 2.1
+

@@ -1,42 +1,29 @@
-{-# LANGUAGE ScopedTypeVariables, BangPatterns #-}
+module Pressure where
 import Data.Word
 import Data.Bits
---import Data.Monoid
 import Control.Monad.State
 
-import Data.ByteString.Lazy.Builder
-import qualified Data.ByteString.Lazy as LB
+import BitPrec
+
+-- import Data.ByteString.Lazy.Builder
+--import qualified Data.ByteString.Lazy as LB
 
 {--
 Todo:
-real code directory structure
-cabal file
-check in
-bitprec in own file?
-
-hlint
-
 criterion benchmarks
-what is the difference in performance and size of Word32 and Word64?
+
+How fast is C code?
+
 profiling
 can I make code faster?
 try bs builder
-benchmark bs builder. Does it matter how stuff are added?
 
 decode
 
 unit tests
-
-C code performance
 --}
 
 type Precision = Word
-
-bitPrec :: forall a . (Bounded a, Integral a) => a
-bitPrec =
-  fromIntegral $ calcBits $ toInteger (maxBound::a)
-  where
-    calcBits = length . takeWhile (> 0) . iterate (`shiftR` 1)
 
 kSpaceForByte :: Int
 kSpaceForByte = fromIntegral $ (bitPrec::Precision) - 8
@@ -84,11 +71,11 @@ encode1 (SymbolFreq cf f tf) =
       
     
   
-
+{--
 main :: IO ()
 main =
-  print $ length $ concat $ evalState (encode $ take 2000000 $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange 
-  --print $ LB.length $ toLazyByteString $ encode $ take 65 $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 4 10]
+  print $ length $ concat $ evalState (encode $ take 2000000 $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
+--}
 
 {--
 
