@@ -1,4 +1,6 @@
+{-- Range encoding implemented with Pipes --}
 module PPressure where
+
 
 import Data.Word
 import Data.Bits
@@ -45,7 +47,5 @@ encode1 () =
      lift $ S.put $ Range (low + cf * (range `div` tf)) ((range `div` tf) * f)
      loop
 
-    
-    
   -- ++ [map (fromIntegral . (`shiftR` kSpaceForByte)) $ take (kHalfPrec `div` 4) $ iterate (`shift` 8) low]
 

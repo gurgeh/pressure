@@ -3,8 +3,10 @@ import Control.Monad.State
 import Control.Proxy
 
 import qualified Control.Proxy.Trans.Writer as W
+import qualified Data.ByteString as B
 
 import PPressure
+--import Pressure
 
 {--
 g++ -O3 20M 650 ms
@@ -14,6 +16,7 @@ ghc -O2:
 
 benchEncode :: Int -> Int
 benchEncode n =
+  --B.length (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10])
   --length $ concat $ evalState (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
   getSum $ snd $ evalState (runProxy $ W.runWriterK $ (fromListS $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) >-> PPressure.encode1 >-> lengthD) startRange
   
