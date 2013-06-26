@@ -1,24 +1,21 @@
 import Criterion.Main
-import Control.Monad.State
-import Control.Proxy
+import Data.Array.Unboxed ((!))
 
-import qualified Control.Proxy.Trans.Writer as W
-import qualified Data.ByteString as B
-
-import PPressure
+import Pressure2
 --import Pressure
 
 {--
 g++ -O3 20M 650 ms
 ghc -O2:
-130614: 1M 234 ms (1M 4690 ms - pipes)
+130624: 1M 234 ms (1M 4690 ms - pipes)
+130626: 1M 95 ms
 --}
 
 benchEncode :: Int -> Int
 benchEncode n =
-  --B.length (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10])
+  fromIntegral $ (rangeCoder $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) ! 5
   --length $ concat $ evalState (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
-  getSum $ snd $ evalState (runProxy $ W.runWriterK $ (fromListS $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) >-> PPressure.encode1 >-> lengthD) startRange
+  --getSum $ snd $ evalState (runProxy $ W.runWriterK $ (fromListS $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) >-> PPressure.encode1 >-> lengthD) startRange
   
 
 main :: IO ()
