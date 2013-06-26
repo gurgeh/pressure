@@ -57,29 +57,28 @@ rangeCoder freqs = runSTUArray $ do
   low' <- newSTRef (0::Precision)
   range' <- newSTRef (-1::Precision)
   let encode (SymbolFreq cf f tf) = 
-        let loop =
+        let loop low range n =
               do
-              low <- readSTRef low'
-              range <- readSTRef range'
               let lx = low `xor` (low + range) < kTop
               when (lx || range < kBot) $ do
                   let r2 = if lx then range else (-low) .&. (kBot - 1)
-                  n <- readSTRef n'
                   writeArray a n (fromIntegral (low `shiftR` kSpaceForByte))
-                  modifySTRef n' (+1)
                   let l8 = (low `shiftL` 8)
                   let r8 = (r2 `shiftL` 8)
-                  writeSTRef low' l8
-                  writeSTRef range' r8
-                  loop
+                  return $ loop l8 r8 (n+1)
+              return (low, range, n)
+                  
         in do
           range <- readSTRef range'
           low <- readSTRef low'
+          n1 <- readSTRef n'
           let ll = low + cf * (range `div` tf)
           let rl = (range `div` tf) * f
-          writeSTRef low' ll
-          writeSTRef range' rl
-          loop 
+          (l2, r2, n2) <- loop ll rl n1
+          writeSTRef low' l2
+          writeSTRef range' r2
+          writeSTRef n' n2
+          
   mapM_ encode freqs
   return a
 
