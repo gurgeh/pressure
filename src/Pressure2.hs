@@ -3,7 +3,7 @@ module Pressure2 where
 import Data.Array.ST (runSTUArray, newArray, writeArray)
 import Data.Array.Unboxed (UArray)
 --import Control.Monad.ST
-import Control.Monad (when)
+import Control.Monad (when, foldM)
 import Data.STRef
 import Data.Bits (xor, shiftL, shiftR, (.&.))
 import Foreign.Storable (sizeOf)
@@ -46,40 +46,41 @@ type CumFreq = Precision
 type Freq    = Precision
 type TotFreq = Precision
 
---try STURef
---try fun instead of STRef
+--finalize data
+--return n, too
+--decode
 
 rangeCoder :: [SymbolFreq] -> UArray Int Word8
 rangeCoder freqs = runSTUArray $ do
   -- assert (cumFreq + freq <= totFreq && freq /= 0 && totFreq <= kBot)
   a <- newArray (0,1000000::Int) (0::Word8)
-  n' <- newSTRef (0::Int)
-  low' <- newSTRef (0::Precision)
-  range' <- newSTRef (-1::Precision)
-  let encode (SymbolFreq cf f tf) = 
+  --n' <- newSTRef (0::Int)
+  --low' <- newSTRef (0::Precision)
+  --range' <- newSTRef (-1::Precision)
+  let encode (l0, r0, n0) (SymbolFreq cf f tf) = 
         let loop low range n =
               do
               let lx = low `xor` (low + range) < kTop
-              when (lx || range < kBot) $ do
+              if (lx || range < kBot) then do
                   let r2 = if lx then range else (-low) .&. (kBot - 1)
                   writeArray a n (fromIntegral (low `shiftR` kSpaceForByte))
                   let l8 = (low `shiftL` 8)
                   let r8 = (r2 `shiftL` 8)
-                  return $ loop l8 r8 (n+1)
-              return (low, range, n)
+                  loop l8 r8 (n+1)
+              else return (low, range, n)
                   
         in do
-          range <- readSTRef range'
-          low <- readSTRef low'
-          n1 <- readSTRef n'
-          let ll = low + cf * (range `div` tf)
-          let rl = (range `div` tf) * f
-          (l2, r2, n2) <- loop ll rl n1
-          writeSTRef low' l2
-          writeSTRef range' r2
-          writeSTRef n' n2
+          --range <- readSTRef range'
+          --low <- readSTRef low'
+          --n1 <- readSTRef n'
+          let ll = l0 + cf * (r0 `div` tf)
+          let rl = (r0 `div` tf) * f
+          loop ll rl n0
+          --writeSTRef low' l2
+          --writeSTRef range' r2
+          --writeSTRef n' n2
           
-  mapM_ encode freqs
+  foldM encode (0::Precision, -1::Precision, 0::Int) freqs
   return a
 
 --loop :: Precision -> Precision -> STUArray Word8

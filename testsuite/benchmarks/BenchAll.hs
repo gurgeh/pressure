@@ -8,7 +8,9 @@ import Pressure2
 g++ -O3 20M 650 ms
 ghc -O2:
 130624: 1M 234 ms (1M 4690 ms - pipes)
-130626: 1M 95 ms
+130626: 1M 95 ms Array
+130626: 1M 58 ms No refs in inner loop
+130627: 1M 
 --}
 
 benchEncode :: Int -> Int
