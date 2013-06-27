@@ -7,7 +7,7 @@ import Control.Monad (when, foldM)
 import Data.STRef
 import Data.Bits (xor, shiftL, shiftR, (.&.))
 import Foreign.Storable (sizeOf)
-import Data.Word (Word8, Word64)
+import Data.Word (Word8, Word64, Word32)
 
 type Precision = Word64
 type UC        = Word8
@@ -37,10 +37,11 @@ data SymbolFreq = SymbolFreq
 
 data Status = Status
     { _low   :: {-# UNPACK #-} !Precision
-    , _range :: {-# UNPACK #-} !Precision }
+    , _range :: {-# UNPACK #-} !Precision
+    , _n     :: {-# UNPACK #-} !Int }
 
-init :: Status
-init = Status { _low = 0, _range = -1 }
+--init :: Status
+--init = Status { _low = 0, _range = -1 }
 
 type CumFreq = Precision
 type Freq    = Precision
@@ -57,7 +58,10 @@ rangeCoder freqs = runSTUArray $ do
   --n' <- newSTRef (0::Int)
   --low' <- newSTRef (0::Precision)
   --range' <- newSTRef (-1::Precision)
-  let encode (l0, r0, n0) (SymbolFreq cf f tf) = 
+  
+  let 
+    --encode :: Monad m => (Precision, Precision, Int) -> SymbolFreq -> m (Precision, Precision, Int)
+    encode (Status l0 r0 n0) (SymbolFreq cf f tf) = 
         let loop low range n =
               do
               let lx = low `xor` (low + range) < kTop
@@ -67,7 +71,7 @@ rangeCoder freqs = runSTUArray $ do
                   let l8 = (low `shiftL` 8)
                   let r8 = (r2 `shiftL` 8)
                   loop l8 r8 (n+1)
-              else return (low, range, n)
+              else return (Status low range n)
                   
         in do
           --range <- readSTRef range'
@@ -80,7 +84,7 @@ rangeCoder freqs = runSTUArray $ do
           --writeSTRef range' r2
           --writeSTRef n' n2
           
-  foldM encode (0::Precision, -1::Precision, 0::Int) freqs
+  foldM encode (Status 0 (-1) 0) freqs
   return a
 
 --loop :: Precision -> Precision -> STUArray Word8
