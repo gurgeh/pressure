@@ -10,7 +10,7 @@ ghc -O2:
 130624: 1M 234 ms (1M 4690 ms - pipes)
 130626: 1M 95 ms Array
 130626: 1M 58 ms No refs in inner loop
-130627: 1M 
+130627: 1M 40 ms Oddly optimal
 --}
 
 benchEncode :: Int -> Int

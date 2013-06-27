@@ -7,9 +7,9 @@ import Control.Monad (when, foldM)
 import Data.STRef
 import Data.Bits (xor, shiftL, shiftR, (.&.))
 import Foreign.Storable (sizeOf)
-import Data.Word (Word8, Word)
+import Data.Word (Word8, Word32)
 
-type Precision = Word
+type Precision = Word32
 type UC        = Word8
 
 ucBits :: Int
@@ -40,9 +40,6 @@ data Status = Status
     , _range :: {-# UNPACK #-} !Precision
     , _n     :: {-# UNPACK #-} !Int }
 
---init :: Status
---init = Status { _low = 0, _range = -1 }
-
 type CumFreq = Precision
 type Freq    = Precision
 type TotFreq = Precision
@@ -54,8 +51,9 @@ type TotFreq = Precision
 rangeCoder :: [SymbolFreq] -> UArray Int Word8
 rangeCoder freqs = runSTUArray $ do
   a <- newArray (0,1000000::Int) (0::Word8)
+  s' <- newSTRef $ Status 0 (-1) 0
   let 
-    encode (Status l0 r0 n0) (SymbolFreq cf f tf) = 
+    encode (SymbolFreq cf f tf) = 
         let loop low range n =
               do
               let lx = low `xor` (low + range) < kTop
@@ -65,13 +63,16 @@ rangeCoder freqs = runSTUArray $ do
                   let l8 = (low `shiftL` 8)
                   let r8 = (r2 `shiftL` 8)
                   loop l8 r8 (n+1)
-              else return (Status low range n)
+              else return $ Status low range n
                   
         in do
+          Status l0 r0 n0 <- readSTRef s'
           let ll = l0 + cf * (r0 `div` tf)
           let rl = (r0 `div` tf) * f
-          loop ll rl n0
+          s <- loop ll rl n0
+          writeSTRef s' s
           
-  foldM encode (Status 0 (-1) 0) freqs
+          
+  mapM_ encode freqs
   return a
 
