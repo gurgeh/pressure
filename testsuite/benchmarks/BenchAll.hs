@@ -1,8 +1,8 @@
 import Criterion.Main
-import Data.Array.Unboxed ((!))
+import Data.Vector.Unboxed ((!))
+import qualified Data.Vector.Unboxed as V
 
-import Pressure2
---import Pressure
+import Pressure
 
 {--
 g++ -O3 20M 650 ms
@@ -15,10 +15,8 @@ ghc -O2:
 
 benchEncode :: Int -> Int
 benchEncode n =
-  fromIntegral $ (rangeCoder $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) ! 5
-  --length $ concat $ evalState (encode $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) startRange
-  --getSum $ snd $ evalState (runProxy $ W.runWriterK $ (fromListS $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10]) >-> PPressure.encode1 >-> lengthD) startRange
-  
+  --snd $ (rangeCoder $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10])
+  snd $ rangeCoder $ V.generate n (\n2 -> if even n2 then (1, 2, 4) else (3, 6, 10))
 
 main :: IO ()
 main = defaultMain [
