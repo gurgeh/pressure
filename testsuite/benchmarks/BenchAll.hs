@@ -1,5 +1,4 @@
 import Criterion.Main
-import Data.Vector.Unboxed ((!))
 import qualified Data.Vector.Unboxed as V
 
 import Pressure
@@ -15,8 +14,8 @@ ghc -O2:
 
 benchEncode :: Int -> Int
 benchEncode n =
-  --snd $ (rangeCoder $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10])
-  snd $ rangeCoder $ V.generate n (\n2 -> if even n2 then (1, 2, 4) else (3, 6, 10))
+  snd $ (rangeCoder $ take n $ cycle [SymbolFreq 1 2 4, SymbolFreq 3 6 10])
+  --snd $ rangeCoder $ V.generate n (\n2 -> if even n2 then (1, 2, 4) else (3, 6, 10))
 
 main :: IO ()
 main = defaultMain [
